@@ -21,6 +21,8 @@ dependencies:
   path_provider: ^2.1.5
   path: ^1.9.1
   share_plus: ^12.0.0
+  # Desktop: picker nativo (alternativa a cámara en Windows/Linux)
+  file_selector: ^1.0.3
   # Historial local (reemplaza IndexedDB)
   hive_flutter: ^1.1.0
   hive: ^2.2.3

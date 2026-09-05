@@ -22,13 +22,10 @@ class ImagePreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Estrategia clave #1: preview liviano — cacheWidth + Transform.rotate, sin decodificar matriz editada
     final file = File(imagePath);
     final angleRad = angleDegrees * math.pi / 180;
 
     return LayoutBuilder(builder: (context, constraints) {
-      final w = constraints.maxWidth;
-      final h = constraints.maxHeight.isFinite ? constraints.maxHeight : w;
       return InteractiveViewer(
         minScale: 0.5,
         maxScale: 4,
@@ -41,7 +38,7 @@ class ImagePreview extends StatelessWidget {
                 file,
                 fit: BoxFit.contain,
                 cacheWidth: cacheWidth?.toInt() ?? 720,
-                errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, size: 48),
+                errorBuilder: (_, _, _) => const Icon(Icons.broken_image, size: 48),
               ),
             ),
             if (showTrace)
@@ -57,7 +54,7 @@ class ImagePreview extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(8)),
-                child: Text('${angleDegrees.toStringAsFixed(angleDegrees.truncateToDouble() == angleDegrees ? 0 : 1).replaceAll('.0','')}°', style: const TextStyle(color: Colors.white, fontFamily: 'monospace', fontSize: 12)),
+                child: Text('${angleDegrees.toStringAsFixed(angleDegrees.truncateToDouble() == angleDegrees ? 0 : 1).replaceAll('.0', '')}°', style: const TextStyle(color: Colors.white, fontFamily: 'monospace', fontSize: 12)),
               ),
             ),
           ],
