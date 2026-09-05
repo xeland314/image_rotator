@@ -1,11 +1,11 @@
 {
-    "name": "Rotador de Imagenes",
-    "short_name": "Rotador de Imagenes",
+    "name": "Rotador de Imágenes",
+    "short_name": "Rotador de Imágenes",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "Rotador de Imagenes Multi-Giro - migrated from Astro/TS",
+    "description": "Rotador de Imágenes Multi-Giro - migrated from Astro/TS",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
