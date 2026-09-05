@@ -53,6 +53,8 @@ class _HomeScreenState extends State<HomeScreen> {
   double get _normalized => normalizeAngle(_totalAngle);
   String get _formula => formatFormula(_ops);
   List<AnimationStep> get _steps => buildAnimationSteps(_ops, includeDirectScene: _includeDirect);
+  // Solo pasos reales (sin Resultado final/directo) para UI compacta
+  List<AnimationStep> get _displaySteps => _steps.where((s) => s.label.startsWith('Paso')).toList();
 
   bool get _isDesktop => !kIsWeb && (Platform.isWindows || Platform.isLinux);
 
@@ -117,15 +119,32 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _cropImage() async {
     if (_imagePath == null) return;
-    final cropped = await ImageCropper().cropImage(
-      sourcePath: _imagePath!,
-      uiSettings: [
-        AndroidUiSettings(toolbarTitle: 'Recortar', lockAspectRatio: false, hideBottomControls: false),
-        IOSUiSettings(title: 'Recortar'),
-        // Windows/Linux: image_cropper no tiene UI nativa, fallback
-      ],
-    );
-    if (cropped != null) setState(() => _imagePath = cropped.path);
+    if (_isDesktop) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Recorte no disponible en Windows/Linux (image_cropper sin plugin desktop). Usa una app externa y vuelve a cargar la imagen.')),
+        );
+      }
+      return;
+    }
+    try {
+      final cropped = await ImageCropper().cropImage(
+        sourcePath: _imagePath!,
+        uiSettings: [
+          AndroidUiSettings(toolbarTitle: 'Recortar', lockAspectRatio: false, hideBottomControls: false),
+          IOSUiSettings(title: 'Recortar'),
+        ],
+      );
+      if (cropped != null) setState(() => _imagePath = cropped.path);
+    } on MissingPluginException {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Recorte no soportado en esta plataforma.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al recortar: $e')));
+    }
   }
 
   void _addOrSave() {
@@ -184,10 +203,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _exportZip() async {
-    if (_imagePath == null || _steps.isEmpty) return;
+    if (_imagePath == null || _displaySteps.isEmpty) return;
     try {
       setState(() => _exportProgress = 0.05);
-      final steps = _steps.where((s) => s.label != 'Resultado directo (efectivo)' || _includeDirect).toList();
+      // ZIP solo pasos reales, sin holds ni duplicados (trazos va aparte)
+      final steps = _displaySteps;
       final angles = steps.map((s) => s.toAngle).toList();
       final labels = steps.map((s) => s.label).toList();
       final dir = await getTemporaryDirectory();
@@ -307,7 +327,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     onPressed: () => _pickImage(ImageSource.camera),
                     icon: Icon(_isDesktop ? Icons.folder_open : Icons.photo_camera),
                     label: Text(_isDesktop ? 'Archivo (alt. cámara)' : 'Cámara'))),
-            if (hasImage) ...[
+            if (hasImage && !_isDesktop) ...[
               const SizedBox(width: 8),
               IconButton.filledTonal(onPressed: _cropImage, icon: const Icon(Icons.crop), tooltip: 'Recortar (uCrop nativo)'),
             ]
@@ -444,7 +464,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 8),
             Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: cs.surfaceContainerHigh, borderRadius: BorderRadius.circular(12)), child: Text(_formula, style: const TextStyle(fontFamily: 'monospace', fontSize: 13))),
             const SizedBox(height: 12),
-            ExpansionTile(title: Text('Ver desglose paso a paso (${_steps.length} pasos)', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)), children: _steps.map((s) {
+            ExpansionTile(title: Text('Ver desglose paso a paso (${_displaySteps.length} pasos)', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)), children: _displaySteps.map((s) {
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 child: Card(
