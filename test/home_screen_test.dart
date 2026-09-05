@@ -49,16 +49,20 @@ void main() {
       expect(hasThemeIcon, isTrue);
     });
 
-    testWidgets('tap en Cámara en Windows/Linux usa fallback file_selector', (tester) async {
+    testWidgets('selector imagen no crashea (desktop solo Galería, móvil Galería+Cámara)', (tester) async {
       await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
       await tester.pump();
-      expect(find.byType(OutlinedButton), findsWidgets);
-      // Tap no debe lanzar MissingPluginException / StateError
-      await tester.tap(find.byType(OutlinedButton).first);
-      await tester.pump();
       if (Platform.isWindows || Platform.isLinux) {
+        expect(find.text('Seleccionar imagen'), findsOneWidget);
+        expect(find.text('Cámara'), findsNothing);
+        await tester.tap(find.text('Seleccionar imagen'));
         await tester.pump(const Duration(milliseconds: 500));
-        // No debe crashear, fallback muestra SnackBar
+        expect(tester.takeException(), isNull);
+      } else {
+        expect(find.byType(OutlinedButton), findsWidgets);
+        await tester.tap(find.byType(OutlinedButton).first);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
         expect(tester.takeException(), isNull);
       }
     });

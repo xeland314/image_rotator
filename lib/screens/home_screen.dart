@@ -130,10 +130,11 @@ class _HomeScreenState extends State<HomeScreen> {
           _imageName = p.basename(x.path);
         });
       } catch (_) {
-        if (mounted)
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('No se pudo abrir selector: $e')),
           );
+        }
       }
     }
   }
@@ -237,9 +238,10 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() => _exportProgress = 0);
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('Error exportando: $e')));
+      }
       setState(() => _exportProgress = 0);
     }
   }
@@ -290,17 +292,19 @@ class _HomeScreenState extends State<HomeScreen> {
       await SharePlus.instance.share(
         ShareParams(files: [XFile(zipPath)], text: 'Pasos rotación $_formula'),
       );
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('ZIP con ${pngPaths.length} pasos compartido'),
           ),
         );
+      }
       setState(() => _exportProgress = 0);
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('Error ZIP: $e')));
+      }
       setState(() => _exportProgress = 0);
     }
   }
@@ -343,7 +347,7 @@ class _HomeScreenState extends State<HomeScreen> {
               errorBuilder: (_, _, _) => const Icon(Icons.rotate_90_degrees_cw),
             ),
             const SizedBox(width: 10),
-            const Text('Rotador Multi-Giro'),
+            const Text('Rotador Imágenes'),
           ],
         ),
         actions: [
@@ -379,57 +383,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header - theme-aware
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: cs.primaryContainer.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: cs.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: cs.primary.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Text(
-                      'HERRAMIENTA DE IMÁGENES',
-                      style: TextStyle(
-                        fontSize: 10,
-                        letterSpacing: 1.5,
-                        color: cs.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Rotador de Imágenes Multi-Giro',
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Carga una imagen y aplica múltiples operaciones concatenadas. Cada giro se aplica sobre el anterior (ej. 900°+770°).',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: cs.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            // 1. Imagen
+            // 1. Imagen — inicio directo (sin header web)
             Text(
               '1. Selecciona tu imagen',
               style: theme.textTheme.labelSmall?.copyWith(
@@ -438,37 +392,50 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: () => _pickImage(ImageSource.gallery),
-                    icon: const Icon(Icons.photo_library),
-                    label: const Text('Galería'),
-                  ),
+            if (_isDesktop)
+              FilledButton.icon(
+                onPressed: () => _pickImage(ImageSource.gallery),
+                icon: const Icon(Icons.photo_library),
+                label: const Text('Seleccionar imagen'),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _pickImage(ImageSource.camera),
-                    icon: Icon(
-                      _isDesktop ? Icons.folder_open : Icons.photo_camera,
-                    ),
-                    label: Text(
-                      _isDesktop ? 'Archivo (alt. cámara)' : 'Cámara',
+              )
+            else
+              Row(
+                children: [
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: () => _pickImage(ImageSource.gallery),
+                      icon: const Icon(Icons.photo_library),
+                      label: const Text('Galería'),
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(44),
+                      ),
                     ),
                   ),
-                ),
-                if (hasImage && !_isDesktop) ...[
                   const SizedBox(width: 8),
-                  IconButton.filledTonal(
-                    onPressed: _cropImage,
-                    icon: const Icon(Icons.crop),
-                    tooltip: 'Recortar (uCrop nativo)',
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _pickImage(ImageSource.camera),
+                      icon: const Icon(Icons.photo_camera),
+                      label: const Text('Cámara'),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(44),
+                      ),
+                    ),
                   ),
+                  if (hasImage) ...[
+                    const SizedBox(width: 8),
+                    IconButton.filledTonal(
+                      onPressed: _cropImage,
+                      icon: const Icon(Icons.crop),
+                      tooltip: 'Recortar (uCrop nativo)',
+                    ),
+                  ],
                 ],
-              ],
-            ),
+              ),
             if (hasImage) ...[
               const SizedBox(height: 12),
               Container(
@@ -605,58 +572,70 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child: Padding(
                 padding: const EdgeInsets.all(12),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _degreesCtrl,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: 'Grados',
-                          border: OutlineInputBorder(),
-                          isDense: true,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: DropdownButtonFormField<RotationDirection>(
-                        initialValue: _dir,
-                        isExpanded: true,
-                        decoration: const InputDecoration(
-                          labelText: 'Dirección',
-                          border: OutlineInputBorder(),
-                          isDense: true,
-                        ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: RotationDirection.cw,
-                            child: Text(
-                              'Horario',
-                              overflow: TextOverflow.ellipsis,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _degreesCtrl,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            decoration: const InputDecoration(
+                              labelText: 'Grados',
+                              border: OutlineInputBorder(),
+                              isDense: true,
                             ),
                           ),
-                          DropdownMenuItem(
-                            value: RotationDirection.ccw,
-                            child: Text(
-                              'Antihorario',
-                              overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: DropdownButtonFormField<RotationDirection>(
+                            initialValue: _dir,
+                            isExpanded: true,
+                            decoration: const InputDecoration(
+                              labelText: 'Dirección',
+                              border: OutlineInputBorder(),
+                              isDense: true,
                             ),
+                            items: const [
+                              DropdownMenuItem(
+                                value: RotationDirection.cw,
+                                child: Text(
+                                  'Horario',
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              DropdownMenuItem(
+                                value: RotationDirection.ccw,
+                                child: Text(
+                                  'Antihorario',
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                            onChanged: (v) {
+                              if (v != null) setState(() => _dir = v);
+                            },
                           ),
-                        ],
-                        onChanged: (v) {
-                          if (v != null) setState(() => _dir = v);
-                        },
-                      ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    FilledButton(
-                      onPressed: _addOrSave,
-                      child: Text(
-                        _editingIndex == null ? 'Agregar' : 'Guardar',
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: _addOrSave,
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size.fromHeight(44),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: Text(
+                          _editingIndex == null ? 'Agregar' : 'Guardar',
+                        ),
                       ),
                     ),
                   ],
@@ -704,7 +683,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            // Acciones — preview es automático (Transform.rotate), no hay botón Aplicar
+            // Acciones — preview es automático (Transform.rotate), botones uniformes
             Row(
               children: [
                 Expanded(
@@ -712,14 +691,22 @@ class _HomeScreenState extends State<HomeScreen> {
                     onPressed: canApply ? _exportFinal : null,
                     icon: const Icon(Icons.save_alt),
                     label: const Text('Guardar en galería'),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(52),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: OutlinedButton.icon(
+                  child: FilledButton.tonalIcon(
                     onPressed: canApply ? _exportZip : null,
                     icon: const Icon(Icons.folder_zip),
                     label: const Text('ZIP pasos'),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(52),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
                   ),
                 ),
               ],
