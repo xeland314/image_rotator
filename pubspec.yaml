@@ -1,0 +1,47 @@
+name: image_rotator
+description: "Rotador de Imágenes Multi-Giro — migrated from Astro/TS. Aplica múltiples rotaciones concatenadas con preview liviano y exportación en Isolate."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  # Selección nativa sin cargar bytes en Dart (XFile path)
+  image_picker: ^1.1.2
+  # Procesamiento puro Dart en Isolate con calidad 95
+  image: ^4.5.4
+  # Guardado moderno en galería (Scoped Storage / PhotoLibrary)
+  gal: ^2.3.1
+  # Recorte nativo uCrop / TOCropViewController
+  image_cropper: ^9.1.0
+  path_provider: ^2.1.5
+  path: ^1.9.1
+  share_plus: ^12.0.0
+  # Historial local (reemplaza IndexedDB)
+  hive_flutter: ^1.1.0
+  hive: ^2.2.3
+  uuid: ^4.5.1
+  archive: ^4.0.7
+  permission_handler: ^12.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  hive_generator: ^2.0.1
+  build_runner: ^2.4.13
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/logo.png
+    - assets/images/logo_v3.png
+    - assets/images/icon-512.png
+    - assets/images/logo_512.png
+    - assets/images/logo_512.webp
+    - assets/images/logo_256.png
+    - assets/images/logo_192.png
