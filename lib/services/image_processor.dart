@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 
 /// Params para Isolate.run — todo debe ser Sendable (primitivos + String)
 class ExportTask {
@@ -49,7 +48,8 @@ Future<ExportResult> exportImageTask(ExportTask task) async {
     rotated = img.copyRotate(decoded, angle: angle);
   }
 
-  final dir = await getTemporaryDirectory();
+  // getTemporaryDirectory() no funciona en Isolate (sin MethodChannel) -> usar systemTemp
+  final dir = Directory.systemTemp;
   final ext = task.format == 'png' ? 'png' : 'jpg';
   final outPath = p.join(dir.path, '${task.outputName}.$ext');
 
@@ -83,7 +83,7 @@ Future<String> exportStepsZipTask(ZipExportTask task) async {
   final decoded = img.decodeImage(bytes);
   if (decoded == null) throw Exception('Decode falló');
 
-  final dir = await getTemporaryDirectory();
+  final dir = Directory.systemTemp;
   final archivePath = p.join(dir.path, 'pasos-rotacion-${DateTime.now().millisecondsSinceEpoch}.zip');
 
   // Construir ZIP manualmente sin cargar todo en memoria a la vez es ideal,

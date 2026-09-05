@@ -211,8 +211,36 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
       setState(() => _exportProgress = 0.9);
-      final savedPath = await GalleryService.saveImage(res.outputPath);
-      // Guardar automáticamente en historial (preview ya es automático, sin botón Aplicar)
+      String savedPath;
+      String msg;
+      if (_isDesktop) {
+        // Windows/Linux: file_selector save dialog (gal no fiable)
+        try {
+          final location = await fs.getSaveLocation(
+            suggestedName: p.basename(res.outputPath),
+            acceptedTypeGroups: const [
+              fs.XTypeGroup(label: 'JPEG', extensions: ['jpg', 'jpeg']),
+            ],
+          );
+          if (location == null) {
+            savedPath = await GalleryService.saveImage(res.outputPath);
+            msg = 'Guardado en $savedPath — elige ubicación para la próxima';
+          } else {
+            final dest = p.join(location.path, p.basename(res.outputPath));
+            // getSaveLocation en Windows devuelve path sin extensión si el usuario no elige, usar save
+            final target = location.path.endsWith('.jpg') || location.path.endsWith('.jpeg') ? location.path : dest;
+            await File(res.outputPath).copy(target);
+            savedPath = target;
+            msg = 'Imagen guardada en $savedPath (calidad 95)';
+          }
+        } catch (_) {
+          savedPath = await GalleryService.saveImage(res.outputPath);
+          msg = 'Imagen guardada en $savedPath (calidad 95)';
+        }
+      } else {
+        savedPath = await GalleryService.saveImage(res.outputPath);
+        msg = 'Imagen guardada en galería (calidad 95)';
+      }
       await HistoryService.save(
         HistoryEntry(
           id: '',
@@ -230,11 +258,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
       await _loadHistory();
       if (mounted) {
-        final msg = Platform.isLinux
-            ? 'Imagen guardada en $savedPath (calidad 95)'
-            : 'Imagen guardada en galería (calidad 95)';
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(msg)));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
         setState(() => _exportProgress = 0);
       }
     } catch (e) {
@@ -289,15 +313,47 @@ class _HomeScreenState extends State<HomeScreen> {
         'pasos-rotacion-${DateTime.now().millisecondsSinceEpoch}.zip',
       );
       await File(zipPath).writeAsBytes(zipBytes);
-      await SharePlus.instance.share(
-        ShareParams(files: [XFile(zipPath)], text: 'Pasos rotación $_formula'),
-      );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('ZIP con ${pngPaths.length} pasos compartido'),
-          ),
+      if (_isDesktop) {
+        try {
+          final location = await fs.getSaveLocation(
+            suggestedName: p.basename(zipPath),
+            acceptedTypeGroups: const [fs.XTypeGroup(label: 'ZIP', extensions: ['zip'])],
+          );
+          if (location != null) {
+            final target = location.path.endsWith('.zip') ? location.path : p.join(location.path, p.basename(zipPath));
+            // Si el usuario eligió directorio, copiar ahí
+            final dest = File(target);
+            if (await dest.exists()) await dest.delete();
+            await File(zipPath).copy(target);
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('ZIP guardado en $target (${pngPaths.length} pasos)')));
+            }
+          } else {
+            // Canceló: guardar en Downloads como fallback
+            final fallback = await GalleryService.saveImage(zipPath);
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('ZIP guardado en $fallback (${pngPaths.length} pasos)')));
+            }
+          }
+        } catch (_) {
+          // Fallback share (puede fallar en Windows sin handler)
+          try {
+            await SharePlus.instance.share(ShareParams(files: [XFile(zipPath)], text: 'Pasos rotación $_formula'));
+          } catch (e) {
+            if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('ZIP en $zipPath (${pngPaths.length} pasos) - error compartir: $e')));
+          }
+        }
+      } else {
+        await SharePlus.instance.share(
+          ShareParams(files: [XFile(zipPath)], text: 'Pasos rotación $_formula'),
         );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('ZIP con ${pngPaths.length} pasos compartido'),
+            ),
+          );
+        }
       }
       setState(() => _exportProgress = 0);
     } catch (e) {

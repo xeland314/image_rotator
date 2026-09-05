@@ -8,17 +8,27 @@ import 'package:path_provider/path_provider.dart';
 /// En Linux copia a `getDownloadsDirectory()` o `getApplicationDocumentsDirectory()`.
 class GalleryService {
   static Future<String> saveImage(String imagePath) async {
-    if (Platform.isLinux) {
-      final dir = await getDownloadsDirectory() ?? await getApplicationDocumentsDirectory();
-      final dest = p.join(dir.path, p.basename(imagePath));
-      await File(imagePath).copy(dest);
-      return dest;
+    if (Platform.isLinux || Platform.isWindows) {
+      try {
+        final dir = await getDownloadsDirectory() ?? await getApplicationDocumentsDirectory();
+        final dest = p.join(dir.path, p.basename(imagePath));
+        await File(imagePath).copy(dest);
+        return dest;
+      } catch (_) {
+        final dest = p.join(Directory.systemTemp.path, p.basename(imagePath));
+        await File(imagePath).copy(dest);
+        return dest;
+      }
     }
     try {
       await Gal.putImage(imagePath);
       return imagePath;
     } on MissingPluginException {
-      // Fallback si el plugin no está registrado en la plataforma
+      final dir = await getDownloadsDirectory() ?? await getApplicationDocumentsDirectory();
+      final dest = p.join(dir.path, p.basename(imagePath));
+      await File(imagePath).copy(dest);
+      return dest;
+    } catch (_) {
       final dir = await getDownloadsDirectory() ?? await getApplicationDocumentsDirectory();
       final dest = p.join(dir.path, p.basename(imagePath));
       await File(imagePath).copy(dest);
