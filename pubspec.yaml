@@ -16,8 +16,8 @@ dependencies:
   image: ^4.5.4
   # Guardado moderno en galería (Scoped Storage / PhotoLibrary)
   gal: ^2.3.1
-  # Recorte nativo uCrop / TOCropViewController
-  image_cropper: ^9.1.0
+  # Recorte nativo uCrop / TOCropViewController (9.1.0 compila contra android-33 -> falla con androidx.annotation 1.4.0 requiere 34; 12.2.1 compila contra 36)
+  image_cropper: ^12.2.1
   path_provider: ^2.1.5
   path: ^1.9.1
   share_plus: ^12.0.0
