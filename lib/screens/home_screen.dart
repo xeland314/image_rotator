@@ -1,7 +1,5 @@
 import 'dart:io';
-import 'dart:isolate';
 
-import 'package:archive/archive.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart' as fs;
@@ -9,14 +7,13 @@ import 'package:flutter/services.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../models/history_entry.dart';
 import '../models/rotation_operation.dart';
+import '../services/export_service.dart';
 import '../services/gallery_service.dart';
 import '../services/history_service.dart';
-import '../services/image_processor.dart';
 import '../services/rotation_logic.dart';
 import '../services/theme_service.dart';
 import '../widgets/image_preview.dart';
@@ -199,12 +196,11 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_imagePath == null) return;
     try {
       setState(() => _exportProgress = 0.1);
-      // Extraer valores sendables antes del Isolate: la closure no debe capturar `this`/WidgetsBinding
-      final String inputPath = _imagePath!;
-      final double angle = _totalAngle;
-      final String outName = 'rotado_${DateTime.now().millisecondsSinceEpoch}';
-      final task = ExportTask(inputPath: inputPath, angleDegrees: angle, outputName: outName, quality: 95, format: 'jpg');
-      final res = await Isolate.run(() => exportImageTask(task));
+      // Delegado a ExportService (SRP): HomeScreen no maneja Isolate directamente
+      final res = await ExportService.exportSingle(
+        inputPath: _imagePath!,
+        angleDegrees: _totalAngle,
+      );
       setState(() => _exportProgress = 0.9);
       String savedPath;
       String msg;
@@ -269,40 +265,16 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_imagePath == null || _displaySteps.isEmpty) return;
     try {
       setState(() => _exportProgress = 0.05);
-      // ZIP solo pasos reales, sin holds ni duplicados (trazos va aparte)
       final steps = _displaySteps;
       final angles = steps.map((s) => s.toAngle).toList();
       final labels = steps.map((s) => s.label).toList();
-      final dir = await getTemporaryDirectory();
-      final List<String> pngPaths = [];
-      final String zipInputPath = _imagePath!;
-      for (var i = 0; i < angles.length; i++) {
-        setState(() => _exportProgress = 0.05 + 0.8 * (i / angles.length));
-        // Extraer task fuera de la closure: Isolate.run no puede capturar `this`/WidgetsBinding
-        final double angleAtI = angles[i];
-        final String outNameAtI = 'paso_${i}_${DateTime.now().millisecondsSinceEpoch}';
-        final taskAtI = ExportTask(inputPath: zipInputPath, angleDegrees: angleAtI, outputName: outNameAtI, quality: 95, format: 'png');
-        final r = await Isolate.run(() => exportImageTask(taskAtI));
-        final safe = labels[i]
-            .replaceAll(RegExp(r'[^a-zA-Z0-9áéíóúñÁÉÍÓÚÑ \-]'), '')
-            .trim();
-        final newName = '${(i + 1).toString().padLeft(2, '0')}-$safe.png';
-        final newPath = p.join(dir.path, newName);
-        await File(r.outputPath).rename(newPath);
-        pngPaths.add(newPath);
-      }
-      setState(() => _exportProgress = 0.9);
-      final archive = Archive();
-      for (final path in pngPaths) {
-        final bytes = await File(path).readAsBytes();
-        archive.addFile(ArchiveFile(p.basename(path), bytes.length, bytes));
-      }
-      final zipBytes = ZipEncoder().encode(archive);
-      final zipPath = p.join(
-        dir.path,
-        'pasos-rotacion-${DateTime.now().millisecondsSinceEpoch}.zip',
+      // Delegado a ExportService: maneja compute/isolate + renames + zip
+      final zipPath = await ExportService.exportZip(
+        inputPath: _imagePath!,
+        angles: angles,
+        labels: labels,
+        onProgress: (v) => mounted ? setState(() => _exportProgress = v) : null,
       );
-      await File(zipPath).writeAsBytes(zipBytes);
       if (_isDesktop) {
         try {
           final location = await fs.getSaveLocation(
@@ -311,26 +283,23 @@ class _HomeScreenState extends State<HomeScreen> {
           );
           if (location != null) {
             final target = location.path.endsWith('.zip') ? location.path : p.join(location.path, p.basename(zipPath));
-            // Si el usuario eligió directorio, copiar ahí
             final dest = File(target);
             if (await dest.exists()) await dest.delete();
             await File(zipPath).copy(target);
             if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('ZIP guardado en $target (${pngPaths.length} pasos)')));
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('ZIP guardado en $target (${angles.length} pasos)')));
             }
           } else {
-            // Canceló: guardar en Downloads como fallback
             final fallback = await GalleryService.saveImage(zipPath);
             if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('ZIP guardado en $fallback (${pngPaths.length} pasos)')));
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('ZIP guardado en $fallback (${angles.length} pasos)')));
             }
           }
         } catch (_) {
-          // Fallback share (puede fallar en Windows sin handler)
           try {
             await SharePlus.instance.share(ShareParams(files: [XFile(zipPath)], text: 'Pasos rotación $_formula'));
           } catch (e) {
-            if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('ZIP en $zipPath (${pngPaths.length} pasos) - error compartir: $e')));
+            if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('ZIP en $zipPath (${angles.length} pasos) - error compartir: $e')));
           }
         }
       } else {
@@ -340,7 +309,7 @@ class _HomeScreenState extends State<HomeScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('ZIP con ${pngPaths.length} pasos compartido'),
+              content: Text('ZIP con ${angles.length} pasos compartido'),
             ),
           );
         }
