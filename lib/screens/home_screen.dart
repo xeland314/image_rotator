@@ -199,17 +199,12 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_imagePath == null) return;
     try {
       setState(() => _exportProgress = 0.1);
-      final res = await Isolate.run(
-        () => exportImageTask(
-          ExportTask(
-            inputPath: _imagePath!,
-            angleDegrees: _totalAngle,
-            outputName: 'rotado_${DateTime.now().millisecondsSinceEpoch}',
-            quality: 95,
-            format: 'jpg',
-          ),
-        ),
-      );
+      // Extraer valores sendables antes del Isolate: la closure no debe capturar `this`/WidgetsBinding
+      final String inputPath = _imagePath!;
+      final double angle = _totalAngle;
+      final String outName = 'rotado_${DateTime.now().millisecondsSinceEpoch}';
+      final task = ExportTask(inputPath: inputPath, angleDegrees: angle, outputName: outName, quality: 95, format: 'jpg');
+      final res = await Isolate.run(() => exportImageTask(task));
       setState(() => _exportProgress = 0.9);
       String savedPath;
       String msg;
@@ -280,19 +275,14 @@ class _HomeScreenState extends State<HomeScreen> {
       final labels = steps.map((s) => s.label).toList();
       final dir = await getTemporaryDirectory();
       final List<String> pngPaths = [];
+      final String zipInputPath = _imagePath!;
       for (var i = 0; i < angles.length; i++) {
         setState(() => _exportProgress = 0.05 + 0.8 * (i / angles.length));
-        final r = await Isolate.run(
-          () => exportImageTask(
-            ExportTask(
-              inputPath: _imagePath!,
-              angleDegrees: angles[i],
-              outputName: 'paso_${i}_${DateTime.now().millisecondsSinceEpoch}',
-              quality: 95,
-              format: 'png',
-            ),
-          ),
-        );
+        // Extraer task fuera de la closure: Isolate.run no puede capturar `this`/WidgetsBinding
+        final double angleAtI = angles[i];
+        final String outNameAtI = 'paso_${i}_${DateTime.now().millisecondsSinceEpoch}';
+        final taskAtI = ExportTask(inputPath: zipInputPath, angleDegrees: angleAtI, outputName: outNameAtI, quality: 95, format: 'png');
+        final r = await Isolate.run(() => exportImageTask(taskAtI));
         final safe = labels[i]
             .replaceAll(RegExp(r'[^a-zA-Z0-9áéíóúñÁÉÍÓÚÑ \-]'), '')
             .trim();
