@@ -23,6 +23,7 @@ import 'components/image_section.dart';
 import 'components/operations_section.dart';
 import 'components/options_export_section.dart';
 import 'components/result_section.dart';
+import 'guide_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -315,6 +316,11 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.school_outlined),
+            tooltip: 'Aprende el Método (guía teórica)',
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GuideScreen())),
+          ),
           ValueListenableBuilder<ThemeMode>(
             valueListenable: ThemeService.themeModeNotifier,
             builder: (context, mode, _) => IconButton(
@@ -405,6 +411,37 @@ class _HomeScreenState extends State<HomeScreen> {
               showTrace: _showTrace,
               includeDirect: _includeDirect,
             ),
+            if (canApply) ...[
+              const SizedBox(height: 12),
+              // Modo "Explicar Resolución" contextual — tarjeta con fórmula aplicada a datos actuales
+              OutlinedButton.icon(
+                onPressed: () => showDialog(
+                  context: context,
+                  builder: (_) => AlertDialog(
+                    title: const Text('Explicar Resolución'),
+                    content: SingleChildScrollView(child: GuideScreen.explainCard(context, _ops)),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cerrar')),
+                      FilledButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const GuideScreen()));
+                        },
+                        child: const Text('Ver guía completa'),
+                      ),
+                    ],
+                  ),
+                ),
+                icon: const Icon(Icons.lightbulb_outline, size: 18),
+                label: const Text('Explicar resolución paso a paso'),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Sin calculadora en el examen: este desglose te enseña a restar múltiplos de 360° mentalmente.',
+                style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant, fontStyle: FontStyle.italic),
+                textAlign: TextAlign.center,
+              ),
+            ],
             const SizedBox(height: 24),
             HistorySection(
               history: _history,
