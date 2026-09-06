@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.14)
 project(image_rotator LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change
-# the on-disk name of your application.
-set(BINARY_NAME "Rotador de Imagenes")
+# the on-disk name of your application. Must be a valid CMake target (no spaces) — use OUTPUT_NAME for display name with spaces.
+set(BINARY_NAME "image_rotator")
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.
