@@ -8,6 +8,7 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../config/feature_flags.dart';
 import '../models/history_entry.dart';
@@ -287,6 +288,19 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Future<void> _openOriginalApp() async {
+    final uri = Uri.parse('https://xeland314.github.io/rotador-imagenes/');
+    try {
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('No se pudo abrir $uri')));
+        }
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error abriendo link: $e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasImage = _imagePath != null;
@@ -405,6 +419,32 @@ class _HomeScreenState extends State<HomeScreen> {
               }),
               onRefresh: _loadHistory,
             ),
+            const SizedBox(height: 32),
+            const Divider(),
+            // Footer portfolio — versión web original (Astro SEO) para publicidad portafolio
+            Center(
+              child: Column(
+                children: [
+                  Text(
+                    '¿Prefieres la versión web?',
+                    style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  ),
+                  const SizedBox(height: 6),
+                  TextButton.icon(
+                    onPressed: _openOriginalApp,
+                    icon: const Icon(Icons.public, size: 18),
+                    label: const Text('Abrir app original en Astro — xeland314.github.io/rotador-imagenes'),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Portafolio: xeland314.github.io • Herramienta educativa de razonamiento abstracto',
+                    style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
           ],
         ),
       ),
