@@ -20,7 +20,7 @@ dependencies:
   image_cropper: ^12.2.1
   path_provider: ^2.1.5
   path: ^1.9.1
-  share_plus: ^12.0.0
+  share_plus: ^13.3.0
   # Desktop: picker nativo (alternativa a cámara en Windows/Linux)
   file_selector: ^1.0.3
   # Historial local (reemplaza IndexedDB)
