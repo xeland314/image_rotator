@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart';
 
+import '../config/feature_flags.dart';
 import '../models/history_entry.dart';
 import '../models/rotation_operation.dart';
 import '../services/export_service.dart';
@@ -59,8 +60,16 @@ class _HomeScreenState extends State<HomeScreen> {
   List<AnimationStep> get _displaySteps => _steps.where((s) => s.label.startsWith('Paso')).toList();
   bool get _isDesktop => !kIsWeb && (Platform.isWindows || Platform.isLinux);
 
-  // --- lógica de imagen ---
+  // --- lógica de imagen (feature flags) ---
   Future<void> _pickImage(ImageSource src) async {
+    if (!FeatureFlags.enableCamera && src == ImageSource.camera) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cámara desactivada por feature flag (ENABLE_CAMERA=false). Usa Galería.')),
+        );
+      }
+      return;
+    }
     if (_isDesktop && src == ImageSource.camera) {
       await _pickViaFileSelectorAsCameraFallback();
       return;
@@ -113,6 +122,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _cropImage() async {
+    if (!FeatureFlags.enableCrop) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Recorte desactivado por feature flag (ENABLE_CROP=false). Activa con --dart-define=ENABLE_CROP=true')),
+        );
+      }
+      return;
+    }
     if (_imagePath == null) return;
     if (_isDesktop) {
       if (mounted) {

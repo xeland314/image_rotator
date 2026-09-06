@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../config/feature_flags.dart';
 import '../../models/rotation_operation.dart';
 import '../../widgets/image_preview.dart';
 
@@ -56,6 +57,28 @@ class ImageSection extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
           )
+        else if (!FeatureFlags.enableCamera)
+          // Variante sin cámara (--dart-define=ENABLE_CAMERA=false): solo galería, sin crop si flag off
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: onPickGallery,
+                  icon: const Icon(Icons.photo_library),
+                  label: const Text('Galería'),
+                  style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(44)),
+                ),
+              ),
+              if (FeatureFlags.enableCrop && hasImage) ...[
+                const SizedBox(width: 8),
+                IconButton.filledTonal(
+                  onPressed: onCrop,
+                  icon: const Icon(Icons.crop),
+                  tooltip: 'Recortar (uCrop nativo)',
+                ),
+              ],
+            ],
+          )
         else
           Row(
             children: [
@@ -80,7 +103,7 @@ class ImageSection extends StatelessWidget {
                   ),
                 ),
               ),
-              if (hasImage) ...[
+              if (FeatureFlags.enableCrop && hasImage) ...[
                 const SizedBox(width: 8),
                 IconButton.filledTonal(
                   onPressed: onCrop,
