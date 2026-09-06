@@ -79,7 +79,7 @@ class HistorySection extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              'Aún no hay elementos. La vista previa es automática; al guardar se creará el historial (Hive local, 100 máx).',
+              'Aún no hay elementos. La vista previa es automática; al guardar se creará el historial local (100 máx).',
               style: TextStyle(fontStyle: FontStyle.italic, color: cs.onSurfaceVariant, fontSize: 12),
               textAlign: TextAlign.center,
             ),
@@ -180,7 +180,7 @@ class HistorySection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        Center(child: Text('Imágenes guardadas localmente con Hive (no se suben al servidor). Máx 100.', style: TextStyle(fontSize: 10, color: cs.onSurfaceVariant))),
+        Center(child: Text('Imágenes guardadas localmente (no se suben al servidor). Máx 100.', style: TextStyle(fontSize: 10, color: cs.onSurfaceVariant))),
         const SizedBox(height: 30),
       ],
     );

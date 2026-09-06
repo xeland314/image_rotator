@@ -458,7 +458,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 32),
             const Divider(),
-            // Footer portfolio — versión web original (Astro SEO) para publicidad portafolio
+            // Footer portfolio — versión web para publicidad
             Center(
               child: Column(
                 children: [
@@ -470,7 +470,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   TextButton.icon(
                     onPressed: _openOriginalApp,
                     icon: const Icon(Icons.public, size: 18),
-                    label: const Text('Abrir app original en Astro — xeland314.github.io/rotador-imagenes'),
+                    label: const Text('Versión Web — xeland314.github.io/rotador-imagenes'),
                   ),
                   const SizedBox(height: 4),
                   Text(

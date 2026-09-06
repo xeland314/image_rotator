@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'dart:math' as math;
+
 import '../models/rotation_operation.dart';
 import '../services/rotation_logic.dart';
-import '../widgets/image_preview.dart';
-
-/// Guía interna "Aprende el Método" — transforma la app de calculadora a herramienta de aprendizaje activo.
-/// Valida para App Review 4.2 Minimum Functionality: teoría + método manual + caso repetitivo 90° x5/x6 con logo_v3.png
 class GuideScreen extends StatelessWidget {
   const GuideScreen({super.key});
 
@@ -162,7 +160,7 @@ class GuideScreen extends StatelessWidget {
                 ],
               ),
             ),
-            // 5. Caso repetitivo 90° x5/x6 con logo_v3.png
+            // 5. Caso repetitivo 90° x5/x6
             _sectionCard(
               context,
               icon: Icons.repeat,
@@ -179,7 +177,7 @@ class GuideScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   const Text('Patrón: cada 4 repeticiones (360°) vuelves al inicio. 5→90°, 6→180°, 7→270°, 8→0°.', style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic)),
                   const SizedBox(height: 12),
-                  Text('Demo visual con logo_v3.png (original 640×640):', style: Theme.of(context).textTheme.labelSmall),
+                  Text('Demo visual:', style: Theme.of(context).textTheme.labelSmall),
                   const SizedBox(height: 8),
                   Row(
                     children: [
@@ -267,11 +265,29 @@ class GuideScreen extends StatelessWidget {
   }
 
   static Widget _logoPreview({required String label, required double angle}) {
+    // Usa Image.asset (no File) para que no falle el demo; ImagePreview espera File y mostraba ícono roto.
+    final rad = angle * math.pi / 180;
     return Column(
       children: [
-        SizedBox(
+        Container(
           height: 120,
-          child: ImagePreview(imagePath: 'assets/images/logo_v3.png', angleDegrees: angle, showTrace: false, cacheWidth: 320),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.black12),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Center(
+            child: Transform.rotate(
+              angle: rad,
+              child: Image.asset(
+                'assets/images/logo_v3.png',
+                fit: BoxFit.contain,
+                width: 90,
+                height: 90,
+                errorBuilder: (_, _, _) => Icon(Icons.image, size: 48, color: Colors.grey[400]),
+              ),
+            ),
+          ),
         ),
         const SizedBox(height: 4),
         Text(label, textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'monospace', fontSize: 11, fontWeight: FontWeight.bold)),
