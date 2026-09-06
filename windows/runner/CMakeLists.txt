@@ -36,8 +36,5 @@ target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app)
 target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib")
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
 
-# Display filename with spaces/accent (exe on disk) without breaking CMake target name.
-set_target_properties(${BINARY_NAME} PROPERTIES OUTPUT_NAME "Rotador de Imagenes")
-
 # Run the Flutter tool portions of the build. This must not be removed.
 add_dependencies(${BINARY_NAME} flutter_assemble)

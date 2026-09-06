@@ -94,7 +94,7 @@ BEGIN
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "Rotador de Imágenes" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.xeland314. All rights reserved." "\0"
-            VALUE "OriginalFilename", "Rotador de Imagenes.exe" "\0"
+            VALUE "OriginalFilename", "image_rotator.exe" "\0"
             VALUE "ProductName", "Rotador de Imágenes" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
