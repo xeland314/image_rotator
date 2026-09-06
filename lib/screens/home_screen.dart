@@ -145,6 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
         uiSettings: [
           AndroidUiSettings(toolbarTitle: 'Recortar', lockAspectRatio: false, hideBottomControls: false),
           IOSUiSettings(title: 'Recortar'),
+          if (kIsWeb) WebUiSettings(context: context),
         ],
       );
       if (cropped != null) setState(() => _imagePath = cropped.path);
