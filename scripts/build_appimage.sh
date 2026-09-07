@@ -93,11 +93,15 @@ else
     export GALLIUM_DRIVER=llvmpipe
     export MESA_GL_VERSION_OVERRIDE=3.3
     export MESA_GLSL_VERSION_OVERRIDE=330
-    if command -v notify-send >/dev/null 2>&1; then
-        notify-send "Rotador de Imágenes" "Iniciando en modo compatibilidad (software)" -i "$ICON_BASE_NAME" || true
-    fi
+    TITLE="Rotador de Imagenes - Modo Compatibilidad"
+    MSG="Tu GPU no soporta OpenGL 3.3 nativo. Iniciando con render por software (CPU)..."
     if command -v zenity >/dev/null 2>&1; then
-        zenity --info --title="Rotador de Imágenes - Modo Compatibilidad" --text="Tu GPU no soporta OpenGL 3.3 nativo.\nIniciando con render por software (CPU)..." --timeout=8 --no-wrap &
+        zenity --info --title="\$TITLE" --text="\$MSG" --timeout=8 --no-wrap &
+    elif command -v kdialog >/dev/null 2>&1; then
+        kdialog --title "\$TITLE" --passivepopup "\$MSG" 8 &
+    fi
+    if command -v notify-send >/dev/null 2>&1; then
+        notify-send "Rotador de Imagenes" "Iniciando en modo compatibilidad" -i "$ICON_BASE_NAME" || true
     fi
     exec "\$HERE/usr/bin/$EXECUTABLE_NAME" "\$@"
 fi
