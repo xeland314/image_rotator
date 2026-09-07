@@ -97,7 +97,7 @@ else
         notify-send "Rotador de Imágenes" "Iniciando en modo compatibilidad (software)" -i "$ICON_BASE_NAME" || true
     fi
     if command -v zenity >/dev/null 2>&1; then
-        zenity --info --title="Rotador de Imágenes - Modo Compatibilidad" --text="Tu GPU no soporta OpenGL 3.3 nativo.\nIniciando con render por software (CPU)..." --timeout=8 --no-wrap & || true
+        zenity --info --title="Rotador de Imágenes - Modo Compatibilidad" --text="Tu GPU no soporta OpenGL 3.3 nativo.\nIniciando con render por software (CPU)..." --timeout=8 --no-wrap &
     fi
     exec "\$HERE/usr/bin/$EXECUTABLE_NAME" "\$@"
 fi
