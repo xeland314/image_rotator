@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Rotador de Imágenes
+GenericName=Rotador de Imagenes
+Comment=Herramienta educativa de razonamiento abstracto - rotaciones multi-giro con trazo goniometro
+Exec=image_rotator
+Icon=com.xeland314.imagerotator
+Categories=Education;Graphics;Utility;
+Terminal=false
+StartupWMClass=Rotador de Imágenes
+MimeType=image/png;image/jpeg;
+Keywords=rotacion;goniometro;educacion;imagen;
