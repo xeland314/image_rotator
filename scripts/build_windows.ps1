@@ -18,9 +18,9 @@ $ErrorActionPreference = "Stop"
 $ProjectRoot = Resolve-Path "$PSScriptRoot\.."
 Set-Location $ProjectRoot
 
-Write-Host "==> Rotador de Imágenes — Build Windows v$Version ($Configuration)" -ForegroundColor Cyan
+Write-Host "==> Rotador de Imagenes -- Build Windows v$Version ($Configuration)" -ForegroundColor Cyan
 
-# 1. NSIS en PATH (fix para tu PS: $env:Path += ";C:\Program Files (x86)\NSIS")
+# 1. NSIS en PATH (fix para tu PS: env:Path += ;C:\Program Files (x86)\NSIS)
 if (-not (Get-Command makensis -ErrorAction SilentlyContinue)) {
     if (Test-Path "$NsisPath\makensis.exe") {
         $env:Path += ";$NsisPath"
@@ -70,7 +70,8 @@ if (-not (Test-Path $exe)) {
     if ($alt) { $exe = $alt.FullName; Write-Host "==> Detectado exe alternativo: $exe" -ForegroundColor Yellow }
     else { Write-Host "ERROR: No se encontró $exe . Ejecuta flutter build windows --release primero." -ForegroundColor Red; exit 1 }
 }
-Write-Host "==> Binario OK: $exe ($( [math]::Round((Get-Item $exe).Length/1MB,2) ) MB)" -ForegroundColor Green
+    $exeSize = [math]::Round((Get-Item $exe).Length/1MB,2)
+    Write-Host "==> Binario OK: $exe ($exeSize MB)" -ForegroundColor Green
 if (-not (Test-Path "LICENSE")) { Write-Host "WARN: LICENSE no existe, NSIS usará página igual pero File /nonfatal lo tolera" -ForegroundColor Yellow }
 
 # 5. Compilar instalador NSIS
@@ -84,11 +85,15 @@ if ($LASTEXITCODE -ne 0) { Write-Host "ERROR: makensis fallo" -ForegroundColor R
 if (Test-Path $outExe) {
     $size = [math]::Round((Get-Item $outExe).Length/1MB,2)
     Write-Host "==> OK: $outExe ($size MB)" -ForegroundColor Green
-    Write-Host "Prueba: .\$outExe  (o click derecho -> Ejecutar)" -ForegroundColor Cyan
+    $runCmd = ".\" + $outExe
+    Write-Host "Prueba: $runCmd  (o click derecho -> Ejecutar)" -ForegroundColor Cyan
 } else {
     # NSIS OutFile puede ser relativo al .nsi dir; buscar
     $found = Get-ChildItem -Recurse -Filter "RotadorImagenes-Setup-v*.exe" | Select-Object -First 1
-    if ($found) { Write-Host "==> OK: $($found.FullName) ($([math]::Round($found.Length/1MB,2)) MB)" -ForegroundColor Green }
+    if ($found) {
+        $foundSize = [math]::Round($found.Length/1MB,2)
+        Write-Host "==> OK: $($found.FullName) ($foundSize MB)" -ForegroundColor Green
+    }
     else { Write-Host "ERROR: No se generó el instalador esperado $outExe" -ForegroundColor Red; exit 1 }
 }
 

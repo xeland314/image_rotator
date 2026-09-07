@@ -1,4 +1,4 @@
-; Rotador de Imágenes — Instalador NSIS
+﻿; Rotador de Imágenes — Instalador NSIS
 ; Adaptado de chat_analyzer_ui/installer.nsi, corregido: sin StartMenu plugin, sin fallo si LICENSE faltante, BINARY_NAME correcto
 !include "MUI2.nsh"
 !include "x64.nsh"
@@ -64,7 +64,7 @@ Section "Instalar" SEC01
 
   ; Binario principal + dependencias Flutter
   ; Estructura generada por: flutter build windows --release
-  ; -> build\windows\x64\runner\Release\image_rotator.exe + *.dll + data\
+  ; -> build\windows\x64\runner\Release\image_rotator.exe + *.dll + data
   File "build\windows\x64\runner\Release\${BINARY_NAME}"
   File /nonfatal "LICENSE"
   File /r /x "*.pdb" /x "*.lib" "build\windows\x64\runner\Release\*.*"
